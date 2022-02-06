@@ -1,0 +1,10 @@
+-VALIDATIONS
+yup
+Email verifiction
+    OTP verifiction / OTP generation 
+    link 
+        ensure that the user is not verified in the database before the verification link is sent to users email.
+        after link is sent and the user verifies his email, reset the value of token to null(this will ultimately make the sesion to expire.).
+    Email Config
+Image upload 
+Role management
