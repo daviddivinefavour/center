@@ -12,7 +12,7 @@ router.put('/user/profile/update/:id',auth, userController.updateUserProfile);
 router.patch('/user/profile/updatePassword/:id',auth, userController.changePassword);
 router.post('/user/login', userController.login);
 
-router.post('user/verify/:token',userController.verifyUser)
+router.put('user/verify/:token',userController.verifyUser)
 
 
 module.exports = router;

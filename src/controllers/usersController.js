@@ -14,12 +14,12 @@ const transporter = nodemailer.createTransport({
     }
   });
 let data = {}
-const yup = require('yup')
+const yup = require('yup');
+const { TokenExpiredError } = require("jsonwebtoken");
 
 //Create a new user and save user data to datbase
 exports.register = async (req, res) => {
     const { firstname, lastname, email, phone, password } = req.body;
-
     // create yup schema object
      let val = yup.object().shape({
         firstname: yup.string().required("The firstname field is required"),
@@ -28,16 +28,12 @@ exports.register = async (req, res) => {
         phone: yup.string().required("The phone field is required"),
         password: yup.string().min(6).required("The password field is required"),
      });
-    
-
     // validate the schema object
-    val
-        .validate(req.body)
-        .then((data) => {
+    val.validate(req.body).then((data) => {
             console.log("All required data fields are filled");
         }).catch(err => {
            return res.status(500).json({ type: err.name, message: err.message });
-        });
+    });
 
     let hashPassword = bcrypt.hashSync(password, saltRounds); // hashes the password for ssecurity purposes
     let trimmedPhone = phone.replaceAll(/\s/g, '') // remove whitespaces from phone number
@@ -51,45 +47,30 @@ exports.register = async (req, res) => {
         password:hashPassword,
     }).save();
 
-
     const verificationToken = user.generateVerificationToken(); // Generate a verification token with the user's ID
     user.token = verificationToken;     // save user token to the user object in the database
-// user.verifiedStatus = true;
-if(user.verifiedStatus===false){
-    try{
-        const url = `http://localhost:8080/api/v1/user/verify/${verificationToken}`
 
-        // console.log("----------------------try catch----------------------------------")
-            
-        exports.verificationURL 
+    const url = `http://localhost:8080/api/v1/user/verify/${verificationToken}` // link that will be sent to the user email address for email verification
+ 
+
+    try{
+
            transporter.sendMail({
              to: email,
              subject: 'Verify Account',
              html: `Click <a href = '${url}'>here</a> to confirm your email.`
            })
 
-           // Resetting the value of the verification token to null
-           user.token = null
-            console.log("token", user.token )
 
             // Returning a response to the client after successfully sending verification email
-            return res
-                .json({
+            return res.json({
                     user:user,
                      message: `Success!!! New user created. Sent a verification email to ${email}`
                 });
        } catch(err){
            return res.status(500).send(err);
        }
-}
-
-return res
-                .json({
-                    user:user,
-                     message: `Success!!! user is verified`
-                });
-
-}
+    }
 
 // Login as an existing user
 exports.login = async (req, res) => {
@@ -156,7 +137,7 @@ exports.updateUserProfile = async (req, res) => {
     }
 };
 
-//Change user password and save to database.
+//Change user passwor    // Our register logic ends hered and save to database.
 exports.changePassword = async (req, res) => {
     try {
        // deconstruct request body and save details in variables for easy manipulations 
@@ -186,16 +167,18 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Verify user email address
+exports.verifyUser = async (req,res) => {
 
-exports.verifyUser = async () => {
-    //All the logic for verifing a user should enter here 
-  try {
-    console.log("Successfully verified user")
     const {token} = req.params
+
     console.log(token)
-  } catch (error) {
-      console.log(error)
-  }
- }
+
+// if(user.verifiedStatus===false){
+
+
+//  }
+
+};
 
 const confirmPassword = (p1, p2) => p1 === p2;
